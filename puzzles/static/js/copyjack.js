@@ -99,6 +99,18 @@ const PASTED_FONT_FAMILY = 'Arial, sans-serif';
 let defaultHuntFontFamily = null;
 let defaultHuntFontSize = '1em';
 
+function darkenColor(colorString) {
+  const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(colorString);
+  if (match) {
+    let color = [+match[1],+match[2],+match[3]];
+    var minVal = 255;
+    for (let c of color) minVal = Math.min(c,minVal);
+    for (let i = 0; i < 3; i++) color[i] -= minVal;
+    return `rgb(${color.join(",")})`;
+  }
+  return colorString;
+}
+
 window.addEventListener("load", () => {
   const bodyStyles = window.getComputedStyle(document.body);
   defaultHuntFontFamily = bodyStyles.getPropertyValue("font-family");
@@ -590,12 +602,14 @@ function copyJackInlineBorders(element) {
   // of the table and give it a bottom-border. There's some sophistication to
   // handle cells that have no border though.
   const inBarredGrid = !!element.closest('.barred');
+  const inDarkTheme = !!element.closest('.dark');
   const styles = window.getComputedStyle(element);
   const borderStyles = ["top", "bottom", "right", "left"].map((dir) => {
-    const [width, style, color] = ["width", "style", "color"].map((attribute) =>
+    let [width, style, color] = ["width", "style", "color"].map((attribute) =>
       styles.getPropertyValue(`border-${dir}-${attribute}`)
     );
     if (width === "0px") return "";
+    if (inDarkTheme) color = darkenColor(color);
     // In barred grids, force the top border to 0px. Separately, a top row will
     // be injected at copy time.
     if (inBarredGrid && dir === 'top') return "";
